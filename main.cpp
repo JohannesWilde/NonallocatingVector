@@ -72,6 +72,16 @@ int main()
 
         std::vector<int, ConstrainedAllocator<int>> v{count, allocator};
         v[0] = 1;
+
+        v.resize(5);
+        try
+        {
+            v.resize(count + 1);
+        }
+        catch (std::exception const & e)
+        {
+            std::cout << "resize(101): " << e.what() << std::endl;
+        }
     }
 
     std::cout << "v[0] = " << owningVector[0] << std::endl;
