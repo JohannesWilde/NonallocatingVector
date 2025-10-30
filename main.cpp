@@ -5,14 +5,14 @@
 #include <vector>
 
 template<class T>
-struct Mallocator
+struct ConstrainedAllocator
 {
     typedef T value_type;
 
-    Mallocator() = default;
+    ConstrainedAllocator() = default;
 
     template<class U>
-    constexpr Mallocator(const Mallocator <U>&) noexcept {}
+    constexpr ConstrainedAllocator(const ConstrainedAllocator <U>&) noexcept {}
 
     [[nodiscard]] T* allocate(std::size_t n)
     {
@@ -43,13 +43,13 @@ private:
 };
 
 template<class T, class U>
-bool operator==(const Mallocator <T>&, const Mallocator <U>&) { return true; }
+bool operator==(const ConstrainedAllocator <T>&, const ConstrainedAllocator <U>&) { return true; }
 
 template<class T, class U>
-bool operator!=(const Mallocator <T>&, const Mallocator <U>&) { return false; }
+bool operator!=(const ConstrainedAllocator <T>&, const ConstrainedAllocator <U>&) { return false; }
 
 int main()
 {
-    std::vector<int, Mallocator<int>> v(8);
+    std::vector<int, ConstrainedAllocator<int>> v(8);
     v.push_back(42);
 }
