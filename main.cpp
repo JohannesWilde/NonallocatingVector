@@ -1,7 +1,5 @@
 #include <cstdlib>
 #include <iostream>
-#include <limits>
-#include <new>
 #include <vector>
 
 template<class T>
@@ -9,47 +7,74 @@ struct ConstrainedAllocator
 {
     typedef T value_type;
 
-    ConstrainedAllocator() = default;
+    ConstrainedAllocator(T * const address, size_t const count)
+        : address_(address)
+        , count_(count)
+    {
+        // intentionally empty
+    }
+
+    ConstrainedAllocator(ConstrainedAllocator const &) = default;
+    ConstrainedAllocator(ConstrainedAllocator &&) = default;
 
     template<class U>
-    constexpr ConstrainedAllocator(const ConstrainedAllocator <U>&) noexcept {}
-
-    [[nodiscard]] T* allocate(std::size_t n)
+    constexpr ConstrainedAllocator(ConstrainedAllocator<U> const & other) noexcept
+        : address_((T *)(other.address_))
+        , count_(other.count_ * sizeof(U) / sizeof(T))
     {
-        if (n > std::numeric_limits<std::size_t>::max() / sizeof(T))
-            throw std::bad_array_new_length();
+        // intentionally empty
+    }
 
-        if (auto p = static_cast<T*>(std::malloc(n * sizeof(T))))
+    size_t max_size() const
+    {
+        return count_;
+    }
+
+    [[nodiscard]] T * allocate(std::size_t n)
+    {
+        if (max_size() < n)
         {
-            report(p, n);
-            return p;
+            throw std::bad_array_new_length();
         }
 
-        throw std::bad_alloc();
+        if (nullptr == address_)
+        {
+            throw std::bad_alloc();
+        }
+
+        return address_;
     }
 
     void deallocate(T* p, std::size_t n) noexcept
     {
-        report(p, n, 0);
-        std::free(p);
+        // intentionally empty
     }
-private:
-    void report(T* p, std::size_t n, bool alloc = true) const
-    {
-        std::cout << (alloc ? "Alloc: " : "Dealloc: ") << sizeof(T) * n
-                  << " bytes at " << std::hex << std::showbase
-                  << reinterpret_cast<void*>(p) << std::dec << '\n';
-    }
+
+    T * const address_;
+    size_t const count_;
 };
 
 template<class T, class U>
-bool operator==(const ConstrainedAllocator <T>&, const ConstrainedAllocator <U>&) { return true; }
+bool operator==(ConstrainedAllocator<T> const &, ConstrainedAllocator<U> const &) { return true; }
 
 template<class T, class U>
-bool operator!=(const ConstrainedAllocator <T>&, const ConstrainedAllocator <U>&) { return false; }
+bool operator!=(ConstrainedAllocator<T> const &, ConstrainedAllocator<U> const &) { return false; }
 
 int main()
 {
-    std::vector<int, ConstrainedAllocator<int>> v(8);
-    v.push_back(42);
+    std::vector<int> owningVector(/*n*/ 100, /*val*/ 0);
+
+    {
+        int * const pointer = owningVector.data();
+        size_t const count = owningVector.size();
+
+        ConstrainedAllocator<int> const allocator{pointer, count};
+
+        std::vector<int, ConstrainedAllocator<int>> v{count, allocator};
+        v[0] = 1;
+    }
+
+    std::cout << "v[0] = " << owningVector[0] << std::endl;
+
+    return 0;
 }
