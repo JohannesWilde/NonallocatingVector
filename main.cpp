@@ -26,5 +26,7 @@ int main()
     method(std::span{customVector.cbegin(), customVector.size()});
     method(std::span{customVector.cbegin(), customVector.cend()});
 
+    method(std::span{customVector.cbegin(), 0});
+
     return 0;
 }
