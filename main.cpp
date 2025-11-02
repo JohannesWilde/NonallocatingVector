@@ -1,19 +1,30 @@
-#include <cstdlib>
+#include <array>
 #include <iostream>
 #include <span>
 #include <vector>
 
 
-void method(std::span<int, std::dynamic_extent> const span)
+void method(std::span<int const> const span)
 {
-    std::cout << "bla: " <<
+    std::cout << "size: " <<
         span.size()
               << std::endl;
 }
 
 int main()
 {
-    std::vector<int> owningVector(/*n*/ 100, /*val*/ 0);
-    method(std::span<int, std::dynamic_extent>(owningVector));
+    std::vector<int> const customVector(/*n*/ 100, /*val*/ 0);
+    method(std::span<int const>(customVector));
+    std::array<int, 7> const customArray{0};
+    method(std::span<int const>(customArray));
+
+    method(customVector);
+    method(customArray);
+
+    method(std::span<int const>(customVector.data(), 8));
+
+    method(std::span{customVector.begin(), customVector.size()});
+    method(std::span{customVector.begin(), customVector.cend()});
+
     return 0;
 }
