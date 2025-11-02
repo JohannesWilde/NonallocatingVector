@@ -23,8 +23,8 @@ int main()
 
     method(std::span<int const>(customVector.data(), 8));
 
-    method(std::span{customVector.begin(), customVector.size()});
-    method(std::span{customVector.begin(), customVector.cend()});
+    method(std::span{customVector.cbegin(), customVector.size()});
+    method(std::span{customVector.cbegin(), customVector.cend()});
 
     return 0;
 }
