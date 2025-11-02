@@ -17,6 +17,7 @@ struct ConstrainedAllocator
     ConstrainedAllocator(ConstrainedAllocator const &) = default;
     ConstrainedAllocator(ConstrainedAllocator &&) = default;
 
+    // todo: understand what this is needed for!
     template<class U>
     constexpr ConstrainedAllocator(ConstrainedAllocator<U> const & other) noexcept
         : address_((T *)(other.address_))
@@ -60,9 +61,20 @@ bool operator==(ConstrainedAllocator<T> const &, ConstrainedAllocator<U> const &
 template<class T, class U>
 bool operator!=(ConstrainedAllocator<T> const &, ConstrainedAllocator<U> const &) { return false; }
 
+
+
+
+void method(std::vector<int> const & bla)
+{
+    std::cout << "bla: " <<
+        bla.size()
+              << std::endl;
+}
+
 int main()
 {
     std::vector<int> owningVector(/*n*/ 100, /*val*/ 0);
+    method(owningVector);
 
     {
         int * const pointer = owningVector.data();
@@ -82,6 +94,11 @@ int main()
         {
             std::cout << "resize(101): " << e.what() << std::endl;
         }
+
+        // https://stackoverflow.com/questions/2114358/using-stl-allocator-with-stl-vectors
+        method(v); // Incorrect type due to different allocator in std::vector<T, Alloc_>.
+        method(*((std::vector<int> const *)(&v))); // Does not work!
+        method(*((std::vector<int> const *)(((std::uint8_t)&v) + sizeof(ConstrainedAllocator<int>)))); // Does not work!
     }
 
     std::cout << "v[0] = " << owningVector[0] << std::endl;
